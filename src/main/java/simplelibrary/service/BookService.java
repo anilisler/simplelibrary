@@ -35,15 +35,15 @@ public class BookService {
 	// Create a new book
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public void addBook(Book book) {
-		bookDao.create(book);
+	public Book addBook(Book book) {
+		return bookDao.create(book);
 	}
 
 	// Update a book
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public void updateBook(Book book) {
-		bookDao.update(book);
+	public Book updateBook(Book book) {
+		return bookDao.update(book);
 	}
 	
 	// Delete a book by title

@@ -17,16 +17,20 @@ public class BookDaoImpl implements BookDao {
 	@Autowired
 	MongoTemplate mongoTemplate;
 
-	public void create(Book book) {
+	public Book create(Book book) {
 		if (book != null) {
 			this.mongoTemplate.insert(book, COLLECTION);
+			return book;
 		}
+		return null;
 	}
 
-	public void update(Book book) {
+	public Book update(Book book) {
 		if (book != null) {
 			this.mongoTemplate.save(book, COLLECTION);
+			return book;
 		}
+		return null;
 	}
 
 	public int deleteById(String _id) {
@@ -43,5 +47,11 @@ public class BookDaoImpl implements BookDao {
 	public List<Book> findAll() {
 		return (List<Book>) mongoTemplate.findAll(Book.class, COLLECTION);
 	}
+	
+	public Book findById(String _id) {
+		Query query = new Query(Criteria.where("_id").is(_id));
+		return this.mongoTemplate.findOne(query, Book.class, COLLECTION);
+	}
+	
 
 }

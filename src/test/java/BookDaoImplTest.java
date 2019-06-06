@@ -1,118 +1,118 @@
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import simplelibrary.dao.BookDaoImpl;
+import simplelibrary.dao.BookDao;
 import simplelibrary.model.Book;
 
+@RunWith(MockitoJUnitRunner.class)
 public class BookDaoImplTest {
 
-	@Autowired
-	MongoTemplate mongotemplate;
-	
-	private static final String COLLECTION = "library";
-//	private String dummy;
-	
-	//@Before // setup()
-    public void before() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getId()).thenReturn("1");
-		PowerMockito.when(mockBook.getTitle()).thenReturn("title1");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("author1");
+	ApplicationContext context = new ClassPathXmlApplicationContext("spring-beans.xml");
+	BookDao bookDao = (BookDao) context.getBean("BookDao");
+
+	@Before
+	public void setup() throws Exception {
 		
-		daoImpl.create(mockBook);
-    }
-	
+		// create test data in db
+		Book book = new Book();
+		book.setId("111111");
+		book.setTitle("title1");
+		book.setAuthor("author1");
+		bookDao.create(book);
+	}
+
 	@Test
 	public void findAllTest() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook1 = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook1.getTitle()).thenReturn("asd");
-		PowerMockito.when(mockBook1.getAuthor()).thenReturn("asd");
 		
-		List<Book> listOfBooks = new ArrayList<Book>();
-		listOfBooks.add(mockBook1);
+		Book mockBook = Mockito.mock(Book.class);
+		Mockito.when(mockBook.getId()).thenReturn("111111");
+		Mockito.when(mockBook.getTitle()).thenReturn("title1");
+		Mockito.when(mockBook.getAuthor()).thenReturn("author1");
+
+		List<Book> listOfBooks = bookDao.findAll();
 		
-		assertEquals(listOfBooks.get(0).getTitle(), daoImpl.findAll().get(0).getTitle());
-		assertEquals(listOfBooks.get(0).getAuthor(), daoImpl.findAll().get(0).getAuthor());
-		
+		assertEquals(mockBook.getId(), listOfBooks.get(listOfBooks.size() - 1).getId());
+		assertEquals(mockBook.getTitle(), listOfBooks.get(listOfBooks.size() - 1).getTitle());
+		assertEquals(mockBook.getAuthor(), listOfBooks.get(listOfBooks.size() - 1).getAuthor());
+		assertNotEquals(0, listOfBooks.size());
 	}
-	
+
 	@Test
 	public void createTest() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getId()).thenReturn("1");
-		PowerMockito.when(mockBook.getTitle()).thenReturn("title1");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("author1");
 		
-		Query query = new Query(Criteria.where("_id").is(mockBook.getId()));
-		Book result = this.mongotemplate.findOne(query, Book.class, COLLECTION);
+		Book mockBook = Mockito.mock(Book.class);
+		Mockito.when(mockBook.getId()).thenReturn("111111");
+		Mockito.when(mockBook.getTitle()).thenReturn("title1");
+		Mockito.when(mockBook.getAuthor()).thenReturn("author1");
 		
-		assertNotNull(result);
+		Book book = bookDao.findById(mockBook.getId());
+		
+		assertNotNull(book);
+		assertEquals(mockBook.getId(),book.getId());
+		assertEquals(mockBook.getTitle(),book.getTitle());
+		assertEquals(mockBook.getAuthor(),book.getAuthor());
 	}
-	
+
 	@Test
 	public void updateTest() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getId()).thenReturn("1");
-		PowerMockito.when(mockBook.getTitle()).thenReturn("title1");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("author1");
 		
+		Book mockBook = Mockito.mock(Book.class);
+		Mockito.when(mockBook.getId()).thenReturn("111111");
+		Mockito.when(mockBook.getTitle()).thenReturn("title2");
+		Mockito.when(mockBook.getAuthor()).thenReturn("author2");
+		
+		Book book = new Book();
+		book.setId("111111");
+		book.setTitle("title2");
+		book.setAuthor("author2");
+		bookDao.update(book);
+		
+		Book bookUpdated = bookDao.findById(mockBook.getId());
+
+		assertEquals(mockBook.getId(),bookUpdated.getId());
+		assertEquals(mockBook.getTitle(),bookUpdated.getTitle());
+		assertEquals(mockBook.getAuthor(),bookUpdated.getAuthor());
 	}
-	
+
 	@Test
 	public void deleteByIdTest() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getId()).thenReturn("1");
-		PowerMockito.when(mockBook.getTitle()).thenReturn("title1");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("author1");
+
+		bookDao.deleteById("111111");
 		
-		daoImpl.deleteById(mockBook.getId());
-		
-		Query query = new Query(Criteria.where("_id").is(mockBook.getId()));
-		Book result = this.mongotemplate.findOne(query, Book.class, COLLECTION);
-		assertNull(result);
+		Book book = bookDao.findById("111111");
+		assertNull(book);
 	}
-	
+
 	@Test
 	public void findByTitleTest() throws Exception {
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getTitle()).thenReturn("asd");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("asd");
-		BookDaoImpl daoImpl = new BookDaoImpl();
+		Book mockBook = Mockito.mock(Book.class);
+		Mockito.when(mockBook.getId()).thenReturn("111111");
+		Mockito.when(mockBook.getTitle()).thenReturn("title1");
+		Mockito.when(mockBook.getAuthor()).thenReturn("author1");
+
+		Book book = bookDao.findByTitle("title1");
 		
-		assertEquals(mockBook.getTitle(), daoImpl.findByTitle("asd").getTitle());
-		assertEquals(mockBook.getAuthor(), daoImpl.findByTitle("asd").getAuthor());
-		
-		assertNull(daoImpl.findByTitle(""));
+		assertEquals(mockBook.getId(),book.getId());
+		assertEquals(mockBook.getTitle(),book.getTitle());
+		assertEquals(mockBook.getAuthor(),book.getAuthor());
 	}
-	
-	
-	
-	//@After // tearDown()
-    public void after() throws Exception {
-		BookDaoImpl daoImpl = new BookDaoImpl();
-		Book mockBook = PowerMockito.mock(Book.class);
-		PowerMockito.when(mockBook.getId()).thenReturn("1");
-		PowerMockito.when(mockBook.getTitle()).thenReturn("title1");
-		PowerMockito.when(mockBook.getAuthor()).thenReturn("author1");
-		
-		daoImpl.deleteById(mockBook.getId());
-    }
+
+	@After
+	public void tearDown() throws Exception {
+		// delete test data in db
+		bookDao.deleteById("111111");
+	}
 }
